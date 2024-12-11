@@ -39,7 +39,10 @@ def update_df(chr_select, group_select, min_range, max_range, all_genes):
         print("Filter groups")
         filtered_data = be.filter_group(group_select, filtered_data)
 
-    if min_range and max_range:
+    if min_range or max_range:
+
+        min_range = min(min_range, filtered_data["start"].min())
+        max_range = max(max_range, filtered_data["end"].max())
         print(min_range, max_range)
         filtered_data = be.filter_ranges(min_range, max_range, filtered_data)
 
@@ -61,12 +64,12 @@ def load_page():
                        all_genes=settings_box[6])
 
     plots = pn.bind(be.plot_plots, final_df)
-    print("Plotted!")
+
 
 
     return pn.template.MaterialTemplate(
         site = "Methylatie tijd",
-        title = "gangang",
+        title = "Website",
         sidebar = [settings_box],
         main = [plots])
 

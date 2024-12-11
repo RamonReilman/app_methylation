@@ -5,6 +5,7 @@ import panel as pn
 import re
 import pandas as pd
 import configparser
+import datashader
 
 @pn.cache
 def parse_config()-> configparser:
@@ -37,8 +38,8 @@ def read_data(config: configparser) -> pl.DataFrame:
          "end":[],
          "frac":[],
          "valid":[],
-         "group_name":[]}
-    )
+         "group_name":[]})
+
     files: list[str] = os.listdir(path)
 
     for file in files:
@@ -59,14 +60,13 @@ def count_methylation_data(df: pl.DataFrame) -> pl.DataFrame:
     all_groups = pl.DataFrame({"group_name": df["group_name"].unique()})
 
     return (df
-    .select(["group_name", "frac"])
-    .group_by("group_name")
-    .agg([pl.len().alias("n methylations")])
-    .join(all_groups, on="group_name", how="full")
-    .with_columns(pl.col("group_name").fill_null(pl.col("group_name_right")))
-    .drop("group_name_right")
-    .fill_null(0)
-)
+        .select(["group_name", "frac"])
+        .group_by("group_name")
+        .agg([pl.len().alias("n methylations")])
+        .join(all_groups, on="group_name", how="full")
+        .with_columns(pl.col("group_name").fill_null(pl.col("group_name_right")))
+        .drop("group_name_right")
+        .fill_null(0))
 
 
 def get_gene_info(annotated_bed: pl.DataFrame, genes: list[str]) -> pl.DataFrame:
@@ -87,7 +87,7 @@ def filter_genes(gene_list: list[str], df: pl.DataFrame, annotated_bed: pl.DataF
          "group_name":[]})
 
     for row in df_wanted.iter_rows():
-        (chromosome, promoter_start, promoter_end, gene_name) = row
+        (chromosome, promoter_start, promoter_end, _) = row
         subsetted_df = df.filter(
             (pl.col("chr") == chromosome) &
             (pl.col("start") >= promoter_start) &
@@ -109,15 +109,15 @@ def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
     return barplot
 
 def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
-    return df.hvplot.scatter(x = "start", y="chr", by="group_name", width = 750,
+    return df.hvplot.scatter(x = "start", y = "chr", by = "group_name", width = 750,
                              height = 400,
                              title = "Methylated DNA points",
                              xlabel = "Start positon of methylation",
-                             ylabel = "Chromosome")
+                             ylabel = "Chromosome", datashade = True)
 
 def plot_density(df: pl.DataFrame) -> hvplot.plot:
     df = df.select(["group_name", "start"])
-    return df.hvplot.kde(by="group_name", width = 750, height = 400,
+    return df.hvplot.kde(by = "group_name", width = 750, height = 400,
                          title = "Density of methylation positions",
                          xlabel = "genomic positions")
 
@@ -125,8 +125,9 @@ def plot_plots(df: pl.DataFrame):
     barplot = plot_barchart(df)
     #scatter = plot_scatter(df)
     density = plot_density(df)
+    print("Plotted!")
     return pn.layout.Row(barplot, density)
-    
+
 
 
 def load_bed_file(config: configparser) -> pl.DataFrame:
