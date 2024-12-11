@@ -121,7 +121,7 @@ def plot_density(df: pl.DataFrame) -> hvplot.plot:
                          title = "Density of methylation positions",
                          xlabel = "genomic positions")
 
-def plot_plots(df: pl.DataFrame) -> pn.layout.Row[hvplot.plot]:
+def plot_plots(df: pl.DataFrame):
     barplot = plot_barchart(df)
     #scatter = plot_scatter(df)
     density = plot_density(df)
