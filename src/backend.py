@@ -28,7 +28,7 @@ def process_groups(config: configparser) -> pl.DataFrame:
     return barcodes_names
 
 
-@pn.cache
+@pn.cache(max_items=10, per_session=True)
 def read_data(config: configparser) -> pl.DataFrame:
     path = config.get("PATHS", "data_folder")
     barcodes_names = process_groups(config)
@@ -99,7 +99,15 @@ def filter_genes(gene_list: list[str], df: pl.DataFrame, annotated_bed: pl.DataF
     return final_subsetted_df
 
 
+
+def loading_indicator(label):
+    return pn.indicators.LoadingSpinner(
+        value = True, name = label ,size = 25, align = "center"
+    )
+
+
 def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
+
     df = count_methylation_data(df)
     barplot = df.hvplot.bar(x = "group_name", y="n methylations",
                             color = "group_name", cmap = "Category10",
@@ -116,12 +124,17 @@ def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
                              ylabel = "Chromosome", datashade = True)
 
 def plot_density(df: pl.DataFrame) -> hvplot.plot:
+
     df = df.select(["group_name", "start"])
-    return df.hvplot.kde(by = "group_name", width = 750, height = 400,
+    return pn.layout.Row(df.hvplot.kde(by = "group_name", width = 750, height = 400,
                          title = "Density of methylation positions",
-                         xlabel = "genomic positions")
+                         xlabel = "genomic positions"))
 
 def plot_plots(df: pl.DataFrame):
+    if df.is_empty():
+        return loading_indicator("Data missing!")
+
+    #yield loading_indicator("Loading plots!")
     barplot = plot_barchart(df)
     #scatter = plot_scatter(df)
     density = plot_density(df)
@@ -145,3 +158,4 @@ def filter_group(group_list: list[str], df: pl.DataFrame) -> pl.DataFrame:
 def filter_ranges(min_range: int, max_range: int, df: pl.DataFrame) -> pl.DataFrame:
     return (df.filter((pl.col("start") >= min_range) &
                       (pl.col("end") <= max_range)))
+

@@ -2,7 +2,8 @@ import panel as pn
 import backend as be
 
 
-pn.extension(design="material", sizing_mode="stretch_width")
+pn.extension(design="material", sizing_mode="stretch_width",
+             nthreads=30, loading_spinner='dots', loading_color='#2196F3')
 
 config = be.parse_config()
 main_data = be.read_data(config=config)
@@ -28,8 +29,11 @@ def create_settings():
                                chr_select, group_select,
                                min_range, max_range,all_genes)
 
+pn.cache(max_items=10, per_session=True)
+def update_df(chr_select, group_select, min_range, max_range, gene_list):
+    if not chr_select and not group_select and not min_range and not max_range and not gene_list:
+        return main_data
 
-def update_df(chr_select, group_select, min_range, max_range, all_genes):
     filtered_data = main_data.clone()
     if chr_select:
         print("Filtering chromosome")
@@ -41,14 +45,14 @@ def update_df(chr_select, group_select, min_range, max_range, all_genes):
 
     if min_range or max_range:
 
-        min_range = min(min_range, filtered_data["start"].min())
-        max_range = max(max_range, filtered_data["end"].max())
+        min_range = max(min_range, filtered_data["start"].min())
+        max_range = min(max_range, filtered_data["end"].max())
         print(min_range, max_range)
         filtered_data = be.filter_ranges(min_range, max_range, filtered_data)
 
-    if all_genes:
+    if gene_list:
         print("Filtering genes")
-        filtered_data = be.filter_genes(all_genes, filtered_data, annotated_bed)
+        filtered_data = be.filter_genes(gene_list, filtered_data, annotated_bed)
 
     print("Filtered data!")
     return filtered_data
@@ -61,21 +65,18 @@ def load_page():
                        group_select=settings_box[3],
                        min_range=settings_box[4],
                        max_range=settings_box[5],
-                       all_genes=settings_box[6])
-
-    plots = pn.bind(be.plot_plots, final_df)
-
+                       gene_list=settings_box[6])
 
 
     return pn.template.MaterialTemplate(
         site = "Methylatie tijd",
         title = "Website",
         sidebar = [settings_box],
-        main = [plots])
+        main = [pn.param.ParamFunction(pn.bind(be.plot_plots, final_df), loading_indicator = True)])
 
 
 def main():
     load_page().servable()
-
+    pn.state.onload(load_page)
 
 main()
