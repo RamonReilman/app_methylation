@@ -1,11 +1,15 @@
 import os
 import hvplot.polars
+
 import polars as pl
 import panel as pn
 import re
 import pandas as pd
 import configparser
-import datashader
+import datashader as ds
+from datashader import transfer_functions as tf
+import asyncio
+
 
 @pn.cache
 def parse_config()-> configparser:
@@ -46,6 +50,8 @@ def read_data(config: configparser) -> pl.DataFrame:
         if os.path.isfile(f"{path}/{file}") and file.endswith("methylatie_ALL.csv"):
             temp_df: pd.DataFrame = pd.read_csv(f"{path}/{file}", sep="\t")
             temp_df: pl.DataFrame = pl.from_pandas(temp_df)
+
+            temp_df = temp_df.with_columns(pl.col("chr").str.split("_").list.get(0))
             barcode_num: list[int] = re.findall(r"\d+", file)
 
             name_group: str = barcodes_names.filter(pl.col("barcode").cast(pl.String) == barcode_num[0]).select("group_and_n")
@@ -73,6 +79,8 @@ def get_gene_info(annotated_bed: pl.DataFrame, genes: list[str]) -> pl.DataFrame
     print("Getting gene info")
     df_wanted = (annotated_bed
                  .filter(pl.col("gene_name").is_in(genes)))
+
+
     return df_wanted
 
 
@@ -99,47 +107,68 @@ def filter_genes(gene_list: list[str], df: pl.DataFrame, annotated_bed: pl.DataF
     return final_subsetted_df
 
 
-
 def loading_indicator(label):
     return pn.indicators.LoadingSpinner(
         value = True, name = label ,size = 25, align = "center"
     )
 
 
-def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
+async def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
 
     df = count_methylation_data(df)
     barplot = df.hvplot.bar(x = "group_name", y="n methylations",
                             color = "group_name", cmap = "Category10",
-                            width = 750, rot=20, height = 400,
+                            width = 1125, rot=20, height = 600,
                             title = "Number of methylations for every group",
                             xlabel = "Group name")
     return barplot
 
-def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
-    return df.hvplot.scatter(x = "start", y = "chr", by = "group_name", width = 750,
-                             height = 400,
+
+async def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
+    return df.hvplot.scatter(x = "start", y = "chr", by = "group_name", width = 1125,
+                             dynamic = False,
+                             alpha = 0.5,
+                             height = 600,
                              title = "Methylated DNA points",
                              xlabel = "Start positon of methylation",
-                             ylabel = "Chromosome", datashade = True)
+                             ylabel = "Chromosome",)
 
-def plot_density(df: pl.DataFrame) -> hvplot.plot:
+
+async def plot_density(df: pl.DataFrame) -> hvplot.plot:
 
     df = df.select(["group_name", "start"])
-    return pn.layout.Row(df.hvplot.kde(by = "group_name", width = 750, height = 400,
-                         title = "Density of methylation positions",
-                         xlabel = "genomic positions"))
 
-def plot_plots(df: pl.DataFrame):
+    return df.hvplot.kde(by = "group_name", width = 1125, height = 600,
+                         title = "Density of methylation positions",
+                         xlabel = "genomic positions")
+
+
+@pn.cache(max_items=10, per_session=True)
+async def plot_plots(df: pl.DataFrame, want_scatter):
     if df.is_empty():
         return loading_indicator("Data missing!")
 
     #yield loading_indicator("Loading plots!")
-    barplot = plot_barchart(df)
-    #scatter = plot_scatter(df)
-    density = plot_density(df)
+    barplot_task = asyncio.create_task(plot_barchart(df))
+    density_task = asyncio.create_task(plot_density(df))
+
+    scatter_task = asyncio.create_task(plot_scatter(df)) if want_scatter else None
+
+    barplot = await barplot_task
+    density = await density_task
+
+    scatter = await scatter_task if scatter_task else pn.pane.Markdown("""
+                                                                       # To get a scatter plot please select 1 or more genes
+                                                                       Since the scatter plot works extremely slow, you have to select a section of genes to view the start points.
+                                                                       """)
+
+    tabs = [("Barplot", barplot), ("Density plot", density), ("Scatter plot", scatter)]
     print("Plotted!")
-    return pn.layout.Row(barplot, density)
+
+
+    return pn.Tabs(*tabs)
+
+
 
 
 

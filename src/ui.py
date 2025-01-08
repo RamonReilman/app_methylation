@@ -1,5 +1,7 @@
 import panel as pn
 import backend as be
+import asyncio
+
 
 
 pn.extension(design="material", sizing_mode="stretch_width",
@@ -25,9 +27,11 @@ def create_settings():
     all_genes = pn.widgets.MultiChoice(options = annotated_bed["gene_name"]
                                        .unique().to_list(), name = "genes:")
 
+
     return pn.layout.WidgetBox("# Settings", "### Configure settings for plotting",
                                chr_select, group_select,
-                               min_range, max_range,all_genes)
+                               min_range, max_range,all_genes,)
+
 
 pn.cache(max_items=10, per_session=True)
 def update_df(chr_select, group_select, min_range, max_range, gene_list):
@@ -66,17 +70,16 @@ def load_page():
                        min_range=settings_box[4],
                        max_range=settings_box[5],
                        gene_list=settings_box[6])
-
-
     return pn.template.MaterialTemplate(
-        site = "Methylatie tijd",
+        site = "Methylatie",
         title = "Website",
         sidebar = [settings_box],
-        main = [pn.param.ParamFunction(pn.bind(be.plot_plots, final_df), loading_indicator = True)])
+        main = [pn.param.ParamFunction(pn.bind(be.plot_plots, final_df, settings_box[6]), loading_indicator = True)])
 
 
 def main():
-    load_page().servable()
+    main_page = load_page()
+    main_page.servable()
     pn.state.onload(load_page)
 
 main()
