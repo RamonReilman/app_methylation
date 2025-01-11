@@ -1,13 +1,10 @@
 import os
 import hvplot.polars
-
 import polars as pl
 import panel as pn
 import re
 import pandas as pd
 import configparser
-import datashader as ds
-from datashader import transfer_functions as tf
 import asyncio
 
 
@@ -84,6 +81,13 @@ def get_gene_info(annotated_bed: pl.DataFrame, genes: list[str]) -> pl.DataFrame
     return df_wanted
 
 
+def filter_df_gene(chr, start, end, df):
+    return df.filter(
+            (pl.col("chr") == chr) &
+            (pl.col("start") >= start) &
+            (pl.col("end") <= end))
+
+
 def filter_genes(gene_list: list[str], df: pl.DataFrame, annotated_bed: pl.DataFrame) -> pl.DataFrame:
     df_wanted = get_gene_info(annotated_bed, gene_list)
     final_subsetted_df: pd.DataFrame = pl.DataFrame(
@@ -96,10 +100,7 @@ def filter_genes(gene_list: list[str], df: pl.DataFrame, annotated_bed: pl.DataF
 
     for row in df_wanted.iter_rows():
         (chromosome, promoter_start, promoter_end, _) = row
-        subsetted_df = df.filter(
-            (pl.col("chr") == chromosome) &
-            (pl.col("start") >= promoter_start) &
-            (pl.col("end") <= promoter_end))
+        subsetted_df = filter_df_gene(chromosome, promoter_start, promoter_end, df)
 
         final_subsetted_df = pl.concat([subsetted_df, final_subsetted_df])
 
@@ -143,6 +144,7 @@ async def plot_density(df: pl.DataFrame) -> hvplot.plot:
                          xlabel = "genomic positions")
 
 
+
 @pn.cache(max_items=10, per_session=True)
 async def plot_plots(df: pl.DataFrame, want_scatter):
     if df.is_empty():
@@ -162,14 +164,8 @@ async def plot_plots(df: pl.DataFrame, want_scatter):
                                                                        Since the scatter plot works extremely slow, you have to select a section of genes to view the start points.
                                                                        """)
 
-    tabs = [("Barplot", barplot), ("Density plot", density), ("Scatter plot", scatter)]
     print("Plotted!")
-
-
-    return pn.Tabs(*tabs)
-
-
-
+    return [("Barplot", barplot), ("Density plot", density), ("Scatter plot", scatter)]
 
 
 def load_bed_file(config: configparser) -> pl.DataFrame:
@@ -188,3 +184,10 @@ def filter_ranges(min_range: int, max_range: int, df: pl.DataFrame) -> pl.DataFr
     return (df.filter((pl.col("start") >= min_range) &
                       (pl.col("end") <= max_range)))
 
+
+def read_variation_genes(config):
+    path = config.get("PATHS", "top_genes")
+    if os.path.isfile(path):
+        return pl.read_csv(path)
+    else:
+        print("No file found for highest group variation, run count_best_genes.py script!")
