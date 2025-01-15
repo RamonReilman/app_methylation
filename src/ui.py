@@ -74,14 +74,14 @@ def load_page():
                        gene_list=settings_box[6])
 
     plots_func = pn.bind(be.plot_plots, final_df, settings_box[6])
-    plots = plots_func()
-    tabs = update_tabs(plots)
+
+    tabs_plots = pn.bind(update_tabs,plots_func)
     #tabs.append(("Test", pn.widgets.DataFrame(top_gene)))
     return pn.template.MaterialTemplate(
         site = "Methylatie",
         title =     "Website",
         sidebar = [settings_box],
-        main = [tabs])
+        main = [tabs_plots])
 
 
 def main():
