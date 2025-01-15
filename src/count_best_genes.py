@@ -44,19 +44,19 @@ def sort_df(df: pl.DataFrame):
 
 
 def write_to_csv(df: pl.DataFrame):
-    df.write_csv("/homes/rreilman/jaar2/kwartaal2/dashboard/app_methylation/data/gene_variation.csv")
+    df.write_csv("/homes/rreilman/jaar2/kwartaal2/dashboard/app_methylation/data/test2.csv")
 
 
 
 def main():
     config = be.parse_config()
-    main_df = be.read_data(config)
+    main = be.read_data(config)
     annotated = be.load_bed_file(config)
 
-    counted = get_top_x_genes(annotated, main_df)
+    counted = get_top_x_genes(annotated, main)
 
     std_df = calc_std(counted)
-    std_df = sort_df(std_df)
+    std_df = sort_df(std_df) 
     write_to_csv(std_df)
 
 if __name__ == "__main__":
