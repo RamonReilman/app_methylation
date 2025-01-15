@@ -4,12 +4,14 @@ import polars as pl
 
 def get_top_x_genes(gene_df: pl.DataFrame, df: pl.DataFrame):
     df_count_groups_list = []
-    dict_start_end = {"start":[],
-                      "end":[]}
+    dict_start_end = {}
     for gene_info in gene_df.iter_rows():
 
         chr, start, end, _ = gene_info
-        if start in dict_start_end["start"] and end in dict_start_end["end"]:
+        if chr not in dict_start_end:
+            dict_start_end[chr] = []
+
+        if [start,end] in dict_start_end[chr]:
             continue
         print(start, end)
         gene_df_filtered = be.filter_chr([chr], gene_df)
@@ -24,8 +26,7 @@ def get_top_x_genes(gene_df: pl.DataFrame, df: pl.DataFrame):
                 pl.lit(gene).alias("gene")
             ])
             df_count_groups_list.append(counted_df_annot)
-        dict_start_end["start"].append(start)
-        dict_start_end["end"].append(end)
+        dict_start_end[chr].append([start,end])
 
     df_count_groups = pl.concat(df_count_groups_list)
     return df_count_groups
@@ -43,19 +44,19 @@ def sort_df(df: pl.DataFrame):
 
 
 def write_to_csv(df: pl.DataFrame):
-    df.write_csv("/homes/rreilman/jaar2/kwartaal2/dashboard/app_methylation/data/test2.csv")
+    df.write_csv("/homes/rreilman/jaar2/kwartaal2/dashboard/app_methylation/data/gene_variation.csv")
 
 
 
 def main():
     config = be.parse_config()
-    main = be.read_data(config)
+    main_df = be.read_data(config)
     annotated = be.load_bed_file(config)
 
-    counted = get_top_x_genes(annotated, main)
+    counted = get_top_x_genes(annotated, main_df)
 
     std_df = calc_std(counted)
-    std_df = sort_df(std_df) 
+    std_df = sort_df(std_df)
     write_to_csv(std_df)
 
 if __name__ == "__main__":

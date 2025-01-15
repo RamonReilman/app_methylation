@@ -1,9 +1,5 @@
 import panel as pn
 import backend as be
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
-
 
 pn.extension(design="material", sizing_mode="stretch_width",
              nthreads=30, loading_spinner='dots', loading_color='#2196F3')
@@ -11,7 +7,7 @@ pn.extension(design="material", sizing_mode="stretch_width",
 config = be.parse_config()
 main_data = be.read_data(config=config)
 annotated_bed = be.load_bed_file(config=config)
-top_gene = be.get_top_x_genes(annotated_bed, main_data).to_pandas()
+#top_gene = be.read_variation_genes(annotated_bed, main_data).to_pandas()
 
 def create_settings():
     chr_select = pn.widgets.MultiChoice(options = main_data["chr"]
@@ -34,10 +30,7 @@ def create_settings():
                                min_range, max_range,all_genes,)
 
 
-pn.cache(max_items=10, per_session=True)
 def update_df(chr_select, group_select, min_range, max_range, gene_list):
-    if not chr_select and not group_select and not min_range and not max_range and not gene_list:
-        return main_data
 
     filtered_data = main_data.clone()
     if chr_select:
@@ -67,11 +60,11 @@ def update_tabs(plots):
     tabs = pn.Tabs()
     for title, plot in plots:
         tabs.append((title, plot))
-        
+
     return tabs
 
 
-async def load_page():
+def load_page():
     settings_box = create_settings()
     final_df = pn.bind(update_df,
                        chr_select=settings_box[2],
@@ -81,9 +74,9 @@ async def load_page():
                        gene_list=settings_box[6])
 
     plots_func = pn.bind(be.plot_plots, final_df, settings_box[6])
-    plots = await plots_func()
+    plots = plots_func()
     tabs = update_tabs(plots)
-    tabs.append(("Test", pn.widgets.DataFrame(top_gene)))
+    #tabs.append(("Test", pn.widgets.DataFrame(top_gene)))
     return pn.template.MaterialTemplate(
         site = "Methylatie",
         title =     "Website",
@@ -91,16 +84,9 @@ async def load_page():
         main = [tabs])
 
 
-def run_loadpage():
-    with ThreadPoolExecutor() as executor:
-        task = executor.submit(asyncio.run, load_page())
-        result = task.result()
-    return result
-
 def main():
-    main_page = run_loadpage()
+    main_page = load_page()
     main_page.servable()
-    pn.state.onload(run_loadpage)
     
 
 main()

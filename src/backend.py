@@ -5,7 +5,6 @@ import panel as pn
 import re
 import pandas as pd
 import configparser
-import asyncio
 
 
 @pn.cache
@@ -114,7 +113,7 @@ def loading_indicator(label):
     )
 
 
-async def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
+def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
 
     df = count_methylation_data(df)
     barplot = df.hvplot.bar(x = "group_name", y="n methylations",
@@ -125,7 +124,7 @@ async def plot_barchart(df: pl.DataFrame) -> hvplot.plot:
     return barplot
 
 
-async def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
+def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
     return df.hvplot.scatter(x = "start", y = "chr", by = "group_name", width = 1125,
                              dynamic = False,
                              alpha = 0.5,
@@ -135,7 +134,7 @@ async def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
                              ylabel = "Chromosome",)
 
 
-async def plot_density(df: pl.DataFrame) -> hvplot.plot:
+def plot_density(df: pl.DataFrame) -> hvplot.plot:
 
     df = df.select(["group_name", "start"])
 
@@ -146,23 +145,19 @@ async def plot_density(df: pl.DataFrame) -> hvplot.plot:
 
 
 @pn.cache(max_items=10, per_session=True)
-async def plot_plots(df: pl.DataFrame, want_scatter):
+def plot_plots(df: pl.DataFrame, want_scatter):
     if df.is_empty():
         return loading_indicator("Data missing!")
 
     #yield loading_indicator("Loading plots!")
-    barplot_task = asyncio.create_task(plot_barchart(df))
-    density_task = asyncio.create_task(plot_density(df))
+    barplot = plot_barchart(df)
+    density = plot_density(df)
 
-    scatter_task = asyncio.create_task(plot_scatter(df)) if want_scatter else None
-
-    barplot = await barplot_task
-    density = await density_task
-
-    scatter = await scatter_task if scatter_task else pn.pane.Markdown("""
+    scatter = plot_scatter(df) if want_scatter else pn.pane.Markdown("""
                                                                        # To get a scatter plot please select 1 or more genes
                                                                        Since the scatter plot works extremely slow, you have to select a section of genes to view the start points.
                                                                        """)
+
 
     print("Plotted!")
     return [("Barplot", barplot), ("Density plot", density), ("Scatter plot", scatter)]
