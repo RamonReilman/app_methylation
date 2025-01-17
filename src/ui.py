@@ -10,6 +10,7 @@ nest_asyncio.apply()
 
 pn.extension(design="material", sizing_mode="stretch_width",
              nthreads=30, loading_spinner='dots', loading_color='#2196F3')
+pn.param.ParamMethod.loading_indicator = True
 
 config = be.parse_config()
 main_data = be.read_data(config=config)
@@ -31,18 +32,22 @@ def create_settings():
     #use_genes = pn.widgets.Checkbox(name = "use genes to search")
     all_genes = pn.widgets.MultiChoice(options = annotated_bed["gene_name"]
                                        .unique().to_list(), name = "genes:",
-                                       max_items = 5)
+                                       max_items = 5,
+                                       option_limit = 10)
 
     amount_rows_variation_file = gene_variation.with_row_index().select("index").max().item()
     top_genes_count = pn.widgets.IntInput(name=f"top x genes with highest count variation\n (max: {amount_rows_variation_file})",
                                           value=20,
                                           end=amount_rows_variation_file, start = 1)
+    
+    submit = pn.widgets.Button(name='Filter data!', button_type='primary')
     return pn.layout.WidgetBox("# Settings", "### Configure settings for plotting",
                                chr_select, group_select,
-                               min_range, max_range,all_genes,top_genes_count)
+                               min_range, max_range,all_genes,top_genes_count,
+                               submit)
 
 
-pn.cache(max_items=10, per_session=True)
+@pn.cache(max_items=10, per_session=True)
 def update_df(chr_select, group_select, min_range, max_range, gene_list):
     if not chr_select and not group_select and not min_range and not max_range and not gene_list:
         return main_data
@@ -73,7 +78,8 @@ def update_df(chr_select, group_select, min_range, max_range, gene_list):
     return filtered_data
 
 
-async def update_tabs(plots, *args):
+def update_tabs(plots, *args):
+    print("Updating tabs")
     tabs = pn.Tabs()
     for title, plot in plots:
         tabs.append((title, plot))
@@ -84,23 +90,27 @@ async def update_tabs(plots, *args):
 
     return tabs
 
-async def append_tabs(tabs, title, item):
-    return tabs.append((title, item))
+
+async def submit_button(button, settings_box):
+    temp_data = main_data.clone()
+    if button:
+        temp_data = update_df(chr_select=settings_box[2].value,
+                       group_select=settings_box[3].value,
+                       min_range=settings_box[4].value,
+                       max_range=settings_box[5].value,
+                       gene_list=settings_box[6].value)
+    headed_gene_variation = be.head_variation(gene_variation, settings_box[7].value)
+    plots = asyncio.run(be.plot_plots(temp_data, settings_box[6].value))
+
+    return update_tabs(plots, ("Gene Variation", headed_gene_variation))
+
 
 async def load_page():
     settings_box = create_settings()
-    final_df = pn.bind(update_df,
-                       chr_select=settings_box[2],
-                       group_select=settings_box[3],
-                       min_range=settings_box[4],
-                       max_range=settings_box[5],
-                       gene_list=settings_box[6])
-    headed_gene_variation = pn.bind(be.head_variation,gene_variation ,settings_box[7])
 
-    plots_func = pn.bind(lambda df, scatter: asyncio.run(be.plot_plots(df, scatter)), final_df, settings_box[6])
+    tabs = pn.bind(lambda button, settings_box:asyncio.run(submit_button(button,
+                                                                         settings_box)), settings_box[8], settings_box)
 
-    tabs = pn.bind(lambda plots, args, : asyncio.run(update_tabs(plots, args)), plots_func, ("Gene variation" , headed_gene_variation))
-    #tabs = pn.bind(lambda tabs, title, df: asyncio.run(append_tabs(tabs, title, df)), tabs, "test", headed_gene_variation)
     
     return pn.template.MaterialTemplate(
         site = "Methylatie",
