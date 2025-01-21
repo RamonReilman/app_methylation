@@ -169,9 +169,24 @@ Maar wees ook zeker welkom om te vragen of ik het even aan wil zetten!
                                                                                                                                                                                                                              
                                                                                                                                                                                                                              
 ## Panel productie/release cycle                                                                                                                                                                                             
-Het beste is om te werken in 2 verschillende omgevingen:                                                                                                                                                                     
-* prod                                                                                                                                                                                                                       
-* stage                                                                                                                                                                                                                      
-                                                                                                                                                                                                                             
-In de prod omgeving wordt                                                                                                                                                                                                    
+### Enviroments                                            
+* development/staging
+    - In deze omgeving wordt de code gemaakt en getest.
+    De staging omegving lijkt heel erg veel op productie, en zal gebruikt worden om het product te testen. Zo wordt het product klaar gemaakt voor prod
+
+* production
+    - Dit is het product, in mijn geval de website, waar de gebruikers bij kunnen. Deze omgeving staat los van delopment.
+
+Het is handig om deze 2 omgevingen gescheiden te houden van elkaar. De beste manier om dit te doen is om ze op 2 verschillende servers te runnen. Als er iets fout gaat tijdens het ontwikkelen, zal prod hier geen last van hebben.
+
+### Updates
+Het updaten van de productie omgeving zal ervoor zorgen dat de website tijdelijk onbereikbaar is, of even niet werkt. Het is dus niet verstandig om elke dag veranderingen uit te voeren op productie.
+
+Ik zou updates, mits relevant, om de 1-2 maand uitvoeren, zo worden de gebruikers niet vaak beïnvloed.
+
+Dit kan natuurlijk veranderd worden aan de hand van hoe nodig de update is.
+
+
+
+
 
