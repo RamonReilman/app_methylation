@@ -147,3 +147,17 @@ python3 -m pytest
 
 ## Support
 If any bugs are to be found, open up an issue on the [repo](https://github.com/RamonReilman/app_methylation/issues)
+
+## File structure
+
+- Data contains data that the website needs to function
+
+- Docs contains the hosting plan
+
+- Logs contains my EDA and logging
+
+- src contains the source code
+
+- static contains images for the readme
+
+- test contains the pytest script
