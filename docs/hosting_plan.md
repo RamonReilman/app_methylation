@@ -79,7 +79,8 @@ mkdir -p /home/redman/jaar2/kwartaal2/datadashboard/.venv/lib/python3.13/site-pa
 cp /home/redman/jaar2/kwartaal2/datadashboard/.venv/lib/python3.13/site-packages/panel/dist/panel.min.js /home/redman/jaar2/kwartaal2/datadashboard/.venv/lib/python3.13/site-packages/bokeh/server/static/extensions/panel/ 
 ```                                                                                                                                                                                                                          
                                                                                                                                                                                                                              
-Hetzelfd moet gedaan worden voor css, images en bundled                                                                                                                                                                      
+Hetzelfde moet gedaan worden voor css, images en bundled
+Als dit gevolgd wordt door iemand moet je natuurlijk wel de paden veranderen naar de juiste folders.                                                                                                                                                               
                                                                                                                                                                                                                              
 ## Stap 3                                                                                                                                                                                                                    
 Nu kunnen de 2 servers gestart worden                                                                                                                                                                                        
