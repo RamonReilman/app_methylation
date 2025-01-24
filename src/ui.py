@@ -18,8 +18,9 @@ import nest_asyncio
 import backend as be
 
 nest_asyncio.apply()
-pn.extension(design="material", sizing_mode="stretch_width",
-             nthreads=30, loading_spinner='dots', loading_color='#2196F3')
+pn.extension("plotly", 'mathjax', design="material",
+             sizing_mode="stretch_width", nthreads=30, loading_spinner="dots",
+             loading_color="#2196F3",)
 pn.param.ParamMethod.loading_indicator = True
 
 
@@ -211,9 +212,11 @@ async def submit_button(button, settings_box):
     if "gene_name" in temp_data.columns:
         return create_tabs(plots,
                             ("Gene Variation", headed_gene_variation),
-                            ("Filtered data", pn.pane.DataFrame(temp_data.select(["chr", "start", "end", "group_name", "gene_name"]).to_pandas())))
+                            ("Filtered data", pn.pane.DataFrame(temp_data.select(["chr", "start", "end", "group_name", "gene_name"]).to_pandas())),
+                            ("Info Page", be.read_info_page(config)))
     return create_tabs(plots,
-                            ("Gene Variation", headed_gene_variation))
+                            ("Gene Variation", headed_gene_variation),
+                            ("Info Page", be.read_info_page(config)))
 
 
 
@@ -242,8 +245,8 @@ async def load_page():
                                                             ), settings_box[8], settings_box)
 
     return pn.template.MaterialTemplate(
-        site="Methylatie",
-        title="Website",
+        site="",
+        title="Methylation-viz",
         sidebar=[settings_box],
         main=[tabs])
 

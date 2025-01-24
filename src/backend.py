@@ -16,8 +16,8 @@ panel serve src/ui.py --port=5100 --allow-websocket-origin='*'
 
 import os
 import re
-import configparser
 import asyncio
+import configparser
 import hvplot.polars
 import polars as pl
 import panel as pn
@@ -128,10 +128,12 @@ def read_data(config: configparser) -> pl.DataFrame:
     for file in files:
         # Check if file exists
         if os.path.isfile(
-                f"{path}/{file}") and file.endswith("methylatie_ALL.csv"):
+                f"{path}/{file}") and file.endswith(".csv"):
 
             # Read it and make it a polars df
-            temp_df: pd.DataFrame = pd.read_csv(f"{path}/{file}", sep="\t")
+            temp_df: pd.DataFrame = pd.read_csv(f"{path}/{file}", sep="\t", names=["chr", "start",
+                                                                                   "end", "frac",
+                                                                                   "valid", "group_name"])
             temp_df: pl.DataFrame = pl.from_pandas(temp_df)
 
             # Remove excess characters from chr
@@ -351,7 +353,7 @@ async def plot_scatter(df: pl.DataFrame) -> hvplot.plot:
                              height=600,
                              title="Methylated DNA points",
                              xlabel="Start positon of methylation",
-                             ylabel="Chromosome",)
+                             ylabel="Chromosome")
 
 
 async def plot_density(df: pl.DataFrame) -> hvplot.plot:
@@ -373,8 +375,7 @@ async def plot_density(df: pl.DataFrame) -> hvplot.plot:
 
     return df.hvplot.kde(by="group_name", width=1125, height=600,
                          title="Density of methylation positions",
-                         xlabel="genomic positions",
-                         subplots=True)
+                         xlabel="genomic positions")
 
 
 @pn.cache(max_items=10, per_session=True)
@@ -414,11 +415,10 @@ async def plot_plots(df: pl.DataFrame, want_scatter: list[str]) -> list[tuple]:
                                                                        # To get a scatter plot please select 1 or more genes
                                                                        Since the scatter plot works extremely slow, you have to select a section of genes to view the start points.
                                                                        """)
-
     print("Plotted!")
     return [("Barplot", barplot),
             ("Density plot",density),
-            ("Scatter plot", scatter)]
+            ("Scatter plot", scatter),]
 
 
 def load_bed_file(config: configparser) -> pl.DataFrame:
@@ -556,3 +556,24 @@ def read_variation_genes(config: configparser):
                             ## Please run the count_best_genes.py script!
                             ## Or ask web-manager (Ramon) to do so!
                             """)
+
+
+def read_info_page(config):
+    """Reads markdown information page
+    
+    Reads markdown file that contains the information page
+    
+    Parameters
+    ----------
+    config : ConfigParser
+            Contains the paths to needed files
+
+    Returns
+    -------
+    pn.pane.MarkDown
+        Panel object that contains information page
+    """
+    path = config.get("PATHS", "info_page")
+    if os.path.isfile(path):
+        with open(file=path, mode='r', encoding='utf-8') as info:
+            return pn.pane.Markdown(info.read())
