@@ -162,12 +162,7 @@ Maar wees ook zeker welkom om te vragen of ik het even aan wil zetten!
 “Apache Virtual Host Documentation - Apache HTTP Server Version 2.4.” Accessed January 19, 2025. https://httpd.apache.org/docs/2.4/vhosts/index.html.                                                                        
 “Libfuse/Sshfs.” C. 2015. Reprint, libfuse, January 19, 2025. https://github.com/libfuse/sshfs.                                                                                                                              
 “Mod_proxy - Apache HTTP Server Version 2.4.” Accessed January 19, 2025. https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypass.                                                                                     
-“VirtualHost Examples - Apache HTTP Server Version 2.4.” Accessed January 19, 2025. https://httpd.apache.org/docs/2.4/vhosts/examples.html.                                                                                  
-                                                                                                                                                                                                                             
-## Panel server performance                                                                                                                                                                                                  
-                                                                                                                                                                                                                             
-                                                                                                                                                                                                                             
-                                                                                                                                                                                                                             
+“VirtualHost Examples - Apache HTTP Server Version 2.4.” Accessed January 19, 2025. https://httpd.apache.org/docs/2.4/vhosts/examples.html.                                                                   
 ## Panel productie/release cycle                                                                                                                                                                                             
 ### Enviroments                                            
 * development/staging
@@ -185,6 +180,8 @@ Het updaten van de productie omgeving zal ervoor zorgen dat de website tijdelijk
 Ik zou updates, mits relevant, om de 1-2 maand uitvoeren, zo worden de gebruikers niet vaak beïnvloed.
 
 Dit kan natuurlijk veranderd worden aan de hand van hoe nodig de update is.
+
+In dit geval sta ik ook nog in direct contact met de gebruikers. In dit geval zal ik ook met mijn contact persoon kunnen bespreken wanneer updates uit kunnen komen.
 
 
 

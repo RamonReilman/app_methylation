@@ -21,6 +21,7 @@ That is why this bioinfmatics and BMR team up is very import. Together we create
 
 ## Requirements
 OS: Linux
+
 Python: 3.11.2 or higher
 
 ### Data
@@ -33,6 +34,7 @@ I cannot share the data with others. If you do need to know the location of the 
 | [Polars](https://github.com/pola-rs/polars)    | 1.20.0  | Polars: Blazingly fast DataFrames in Rust, Python, Node.js, R, and SQL                                                                       |
 | [Pandas](https://github.com/pandas-dev/pandas) | 2.2.3   | pandas: powerful Python data analysis toolkit                                                                                                |
 | [hvplot](https://github.com/holoviz/hvplot)    | 0.11.2  | hvPlot makes data analysis and visualization simple                                                                                          |
+| [Bio](https://github.com/biopython/biopython) | 1.85 | The Biopython Project is an international association of developers of freely available Python tools for computational molecular biology. |
 
 
 ## Installing
